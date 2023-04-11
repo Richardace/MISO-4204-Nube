@@ -2,6 +2,8 @@ from flask import Flask
 
 from celery import Celery, Task
 
+from async_tasks import *
+
 def celery_init_app(app: Flask) -> Celery:
     class FlaskTask(Task):
         def __call__(self, *args: object, **kwargs: object) -> object:
@@ -21,6 +23,7 @@ def create_app() -> Flask:
             broker_url="redis://localhost",
             result_backend="redis://localhost",
             task_ignore_result=True,
+            include = ('async_tasks.tasks')
         ),
     )
     app.config.from_prefixed_env()
