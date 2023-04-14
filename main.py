@@ -6,6 +6,8 @@ from celery.result import AsyncResult
 from celery import shared_task
 from async_tasks import tasks
 from factory import *
+import pymysql
+
 
 app = create_app()
 celery_app = app.extensions["celery"]
@@ -13,7 +15,6 @@ celery_app = app.extensions["celery"]
 @app.route("/")
 def hello():
     return "<h1 style='color:blue'>eHello There!</h1>"
-
 
 @app.post("/add")
 def start_add() -> dict[str, object]:
@@ -34,10 +35,30 @@ def task_result(id: str) -> dict[str, object]:
         "a": result.status
     }
 
-@app.errorhandler(Exception)
-def exception_handler(error):
-    return "!!!!"  + repr(error)
+
+@app.get("/list_tasks")
+def getTasks() -> dict[str, object]:
+
+    conn = returnConection()
+    print("SUCCESS: Connection to RDS MySQL instance succeeded")
+    with conn.cursor() as cur:
+        sql = "INSERT INTO dbconvert.usuarios VALUES (null, 'Santy', 'Santy', 'Sany')"
+        cur.execute(sql)
+        eventId = cur.lastrowid
+        print(eventId)
+        conn.commit()
+    conn.close()
+    print("hola")
+    return {"result_id": "hola"}
+
+def returnConection():
+    try:
+        return pymysql.connect(host='54.211.21.168', port=3306, user='test', passwd='password', db='dbconvert')
+    except pymysql.MySQLError as e:
+        print(repr(e))
+        return None
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
+
 
