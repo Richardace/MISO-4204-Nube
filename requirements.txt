@@ -19,3 +19,5 @@ six==1.16.0
 vine==5.0.0
 wcwidth==0.2.6
 Werkzeug==2.2.3
+gevent==22.10.2
+pymysql==1.0.3
