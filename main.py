@@ -1,3 +1,4 @@
+import zipfile
 from flask import Flask
 from celery import Celery, Task
 from flask import request
@@ -24,17 +25,19 @@ def uploadFile() -> dict[str, object]:
     uid = str(uuid.uuid4())
     newFormat = request.form.get("newFormat", type=str)
     f = request.files['fileName']
-    f.save("./uploads/"+uid)
+    fileName = f.filename
+    f.save("./uploads/"+fileName)
     conn = returnConection()
     with conn.cursor() as cur:
         sql = "INSERT INTO `archivos` (`id`, `status`, `timestamp`, `fileName`, `newFormat`, `fileIdentifier`) VALUES (null, '{status}', '{timestamp}', '{fileName}', '{newFormat}', '{fileIdentifier}');"
-        sql = sql.format(status = "UPLOADED", timestamp = datetime.now(), fileName=f.filename, newFormat=newFormat,fileIdentifier=uid)
+        sql = sql.format(status = "UPLOADED", timestamp = datetime.now(), fileName=fileName, newFormat=newFormat,fileIdentifier=uid)
         cur.execute(sql)
         eventId = cur.lastrowid
         print(eventId)
         conn.commit()
     conn.close()
-    return {"uid": uid}
+    taskId = tasks.startConversion.delay(uid, fileName, newFormat)
+    return {"uid": uid, "taskId": taskId.id}
 
 
 @app.post("/add")
