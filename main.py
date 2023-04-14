@@ -7,6 +7,8 @@ from celery import shared_task
 from async_tasks import tasks
 from factory import *
 import pymysql
+import uuid
+from datetime import datetime
 
 
 app = create_app()
@@ -15,6 +17,25 @@ celery_app = app.extensions["celery"]
 @app.route("/")
 def hello():
     return "<h1 style='color:blue'>eHello There!</h1>"
+
+#SUBIR ARCHIVO
+@app.post("/api/tasks")
+def uploadFile() -> dict[str, object]:
+    uid = str(uuid.uuid4())
+    newFormat = request.form.get("newFormat", type=str)
+    f = request.files['fileName']
+    f.save("./uploads/"+uid)
+    conn = returnConection()
+    with conn.cursor() as cur:
+        sql = "INSERT INTO `archivos` (`id`, `status`, `timestamp`, `fileName`, `newFormat`, `fileIdentifier`) VALUES (null, '{status}', '{timestamp}', '{fileName}', '{newFormat}', '{fileIdentifier}');"
+        sql = sql.format(status = "UPLOADED", timestamp = datetime.now(), fileName=f.filename, newFormat=newFormat,fileIdentifier=uid)
+        cur.execute(sql)
+        eventId = cur.lastrowid
+        print(eventId)
+        conn.commit()
+    conn.close()
+    return {"uid": uid}
+
 
 @app.post("/add")
 def start_add() -> dict[str, object]:

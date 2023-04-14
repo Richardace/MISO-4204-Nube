@@ -27,6 +27,7 @@ def create_app() -> Flask:
         ),
     )
     app.config.from_prefixed_env()
+    app.config['UPLOAD_FOLDER'] = "./uploads/"
     celery_init_app(app)
     return app
 
