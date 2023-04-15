@@ -21,3 +21,15 @@ Esta es una api rest la cual permite realizar la conversión y comprensión de a
 | tasks/<int:id_task> | GET  |Permite recuperar la información de una tarea en la aplicación. El usuario requiere autorización.    |
 | tasks/<int:id_task> | DELETE | Permite eliminar una tarea en la aplicación. El usuario requiere autorización.  |
 | files/filename    | GET | Permite recuperar el archivo original o procesado   |
+
+# Stack Tecnológico
+- Python: 3.11.3 
+- MySql: 8.0.32
+- Celery: 5.2.7
+- Flask: 2.2.3
+- Gunicorn: 20.1.0
+- Redis: 4.5.4
+- Werkzeug: 2.2.3
+- Gevent: 22.10.2
+- Pymysql: 1.0.3
+- Pyjwt: 2.6.0
