@@ -14,6 +14,7 @@ from datetime import datetime
 import hashlib
 import jwt
 from flask import send_file
+import re
 
 app = create_app()
 celery_app = app.extensions["celery"]
@@ -50,16 +51,36 @@ def register() -> dict[str,object]:
     except:
         return {"message":"Hubo un problema valor del contrasena"}, 400
     
+    contrasena2 = ""
+    try:
+        contrasena2 = request.json["contrasena2"]
+        if(contrasena2 == ""):
+            return {"message":"La contrasena2 no puede ser vacio!"}, 400
+    except:
+        return {"message":"Hubo un problema valor del contrasena2"}, 400
+    
+    if(contrasena != contrasena2):
+        return {"message":"La contraseñas no son iguales"}, 400
+    
     conn = returnConection()
     result = any
     print("SUCCESS: Connection to RDS MySQL instance succeeded")
     with conn.cursor() as cur:
-        sql = "SELECT `id` FROM `usuarios` where `usuario` = %s;"
-        cur.execute(sql,(usuario))
+        sql = "SELECT `id` FROM `usuarios` where `usuario` = %s or `correo` = %s;"
+        cur.execute(sql,(usuario, correo))
         result = cur.fetchone()
         print(result)        
     
     if result is None:
+        # Ejemplo de uso        
+        if(validar_contraseña(contrasena) == False):
+            return {"message":"La contraseña no cumple con los requisitos mínimos de seguridad.\
+                    Longitud mínima de 8 caracteres\
+                    Al menos una letra mayúscula\
+                    Al menos una letra minúscula\
+                    Al menos un número\
+                    Al menos un carácter especial (como !, @, #, $, %, etc.) "}, 400
+            
         contrasena_encriptada = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest()
         with conn.cursor() as cur:
             sql = "INSERT INTO `usuarios` (`id`, `usuario`, `correo`, `contrasena`) VALUES (null, '{usuario}', '{correo}', '{pwd}');"
@@ -73,7 +94,21 @@ def register() -> dict[str,object]:
         return {"mensaje": "usuario creado exitosamente"}
     else:
         conn.close()
-        return {"message":"El usuario ya existe"}, 404
+        return {"message":"El usuario o correo ya existe"}, 404
+
+import re
+
+def validar_contraseña(contraseña):
+    # Expresión regular para validar una contraseña segura
+    regex = r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,}$"
+    
+    # Comprobar si la contraseña coincide con la expresión regular
+    if re.match(regex, contraseña):
+        print("La contraseña es segura")
+        return True
+    else:
+        print("La contraseña no cumple con los requisitos mínimos de seguridad")
+        return False
 
 @app.post("/api/auth/login")
 def login() -> dict[str,object]:
@@ -190,7 +225,7 @@ def consultarTarea(id_task: str) -> dict[str, object]:
         "userId": result[7]
        }
     else:
-        return {"message":"Tarea no existe"}, 404     
+        return {"message":"Tare no exite"}, 404     
    
      
 #Eliminar un Archivo
@@ -210,9 +245,9 @@ def eliminarTarea(id_task: str) -> dict[str, object]:
         conn.commit()        
         conn.close()
     if result == 1:
-       return {"message":"Tarea Eliminada Exitosamente"} 
+       return {"message":"Tare Eliminada"} 
     else:
-       return {"message":"Tarea no Diponible"}, 404
+       return {"message":"Tarea no siponible"}, 404
 
 @app.get("/api/tasks")
 def getTasks() -> dict[str, object]:
