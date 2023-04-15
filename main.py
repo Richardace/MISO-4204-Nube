@@ -130,23 +130,6 @@ def task_result(id: str) -> dict[str, object]:
         "a": result.status
     }
 
-
-@app.get("/list_tasks")
-def getTasks() -> dict[str, object]:
-
-    conn = returnConection()
-    print("SUCCESS: Connection to RDS MySQL instance succeeded")
-    with conn.cursor() as cur:
-        sql = "INSERT INTO dbconvert.usuarios VALUES (null, 'Santy', 'Santy', 'Sany')"
-        cur.execute(sql)
-        eventId = cur.lastrowid
-        print(eventId)
-        conn.commit()
-    conn.close()
-    print("hola")
-    return {"result_id": "hola"}
-
-
 #Consultar Archivo
 @app.get("/api/tasks/<id_task>")
 def consultarTarea(id_task: str) -> dict[str, object]:
@@ -212,8 +195,8 @@ def getTasks() -> dict[str, object]:
     conn = returnConection()
     result = any
     with conn.cursor() as cur:
-        sql = "SELECT * FROM dbconvert.archivos"
-        #sql = "SELECT * FROM dbconvert.archivos where userId = " + str(userId)
+        #sql = "SELECT * FROM dbconvert.archivos"
+        sql = "SELECT * FROM dbconvert.archivos where userId = " + str(userId)
         
         if(order != ""):
             if(int(order) == 0):
@@ -279,5 +262,3 @@ def returnConection():
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
-
-
