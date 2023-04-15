@@ -21,3 +21,4 @@ wcwidth==0.2.6
 Werkzeug==2.2.3
 gevent==22.10.2
 pymysql==1.0.3
+pyjwt==2.6.0
