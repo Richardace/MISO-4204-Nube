@@ -1,3 +1,4 @@
+import json
 import zipfile
 from flask import Flask
 from celery import Celery, Task
@@ -70,14 +71,28 @@ def login() -> dict[str,object]:
         print(result)
     
     if result is not None:
-        encoded = jwt.encode({"some": "payload"}, key, algorithm="HS256")
+        encoded = jwt.encode({"userId": result[0]}, key, algorithm="HS256")
         return {"token": encoded}
     else:
         return {"message":"Usuario o contraseña incorrectos!"}, 404     
     
+def getUserId():
+    try: 
+        token = request.headers.get('Authorization')
+        decodedToken = jwt.decode(token.replace("Bearer ", ""), options={"verify_signature": False})
+        userId = decodedToken.get("userId")
+        return userId
+    except:
+        return None
+    
+
 #SUBIR ARCHIVO
 @app.post("/api/tasks")
 def uploadFile() -> dict[str, object]:
+    userId = getUserId()
+    if userId == None:
+        return {"message":"Unauthorized"}, 401
+    
     uid = str(uuid.uuid4())
     newFormat = request.form.get("newFormat", type=str)
     f = request.files['fileName']
@@ -85,8 +100,8 @@ def uploadFile() -> dict[str, object]:
     f.save("./uploads/"+fileName)
     conn = returnConection()
     with conn.cursor() as cur:
-        sql = "INSERT INTO `archivos` (`id`, `status`, `timestamp`, `fileName`, `newFormat`, `fileIdentifier`) VALUES (null, '{status}', '{timestamp}', '{fileName}', '{newFormat}', '{fileIdentifier}');"
-        sql = sql.format(status = "UPLOADED", timestamp = datetime.now(), fileName=fileName, newFormat=newFormat,fileIdentifier=uid)
+        sql = "INSERT INTO `archivos` (`id`, `status`, `timestamp`, `fileName`, `newFormat`, `fileIdentifier`,`userId`) VALUES (null, '{status}', '{timestamp}', '{fileName}', '{newFormat}', '{fileIdentifier}', '{userId}');"
+        sql = sql.format(status = "UPLOADED", timestamp = datetime.now(), fileName=fileName, newFormat=newFormat,fileIdentifier=uid, userId=userId)
         cur.execute(sql)
         eventId = cur.lastrowid
         print(eventId)
