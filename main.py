@@ -10,15 +10,71 @@ from factory import *
 import pymysql
 import uuid
 from datetime import datetime
-
+import hashlib
+import jwt
 
 app = create_app()
 celery_app = app.extensions["celery"]
+key = "estoesunsecreto"
 
 @app.route("/")
 def hello():
     return "<h1 style='color:blue'>eHello There!</h1>"
 
+#SingUp
+@app.post("/api/auth/signup") 
+def register() -> dict[str,object]:
+    usuario = request.json["usuario"]
+    correo = request.json["correo"]
+    contrasena = request.json["contrasena"]
+    conn = returnConection()
+    result = any
+    print("SUCCESS: Connection to RDS MySQL instance succeeded")
+    with conn.cursor() as cur:
+        sql = "SELECT `id` FROM `usuarios` where `usuario` = %s;"
+        cur.execute(sql,(usuario))
+        result = cur.fetchone()
+        print(result)        
+    
+    #usuario = Usuario.query.filter(Usuario.usuario == request.json["usuario"]).first()
+    #return {"user":usuario, "correo": correo, "contrasena":contrasena}
+    if result is None:
+        contrasena_encriptada = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest()
+        with conn.cursor() as cur:
+            sql = "INSERT INTO `usuarios` (`id`, `usuario`, `correo`, `contrasena`) VALUES (null, '{usuario}', '{correo}', '{pwd}');"
+            sql = sql.format(usuario = usuario, correo = correo, pwd = contrasena_encriptada)
+            cur.execute(sql)
+            eventId = cur.lastrowid
+            print(eventId)
+            conn.commit()    
+        
+        conn.close()
+        return {"mensaje": "usuario creado exitosamente"}
+    else:
+        conn.close()
+        return {"message":"El usuario ya existe"}, 404
+
+@app.post("/api/auth/login")
+def login() -> dict[str,object]:
+    usuario = request.json["usuario"]
+    contrasena = request.json["contrasena"]
+    
+    contrasena_encriptada = hashlib.md5(contrasena.encode('utf-8')).hexdigest()
+    conn = returnConection()
+    result = any
+    print("SUCCESS: Connection to RDS MySQL instance succeeded")
+    with conn.cursor() as cur:
+        sql = "SELECT `id` FROM `usuarios` where `usuario` = %s AND `contrasena` = %s;"
+        cur.execute(sql,(usuario, contrasena_encriptada))
+        result = cur.fetchone()
+        print(result)
+    
+    if result is not None:
+        encoded = jwt.encode({"some": "payload"}, key, algorithm="HS256")
+        return {"token": encoded}
+    else:
+        return {"message":"Usuario o contraseña incorrectos!"}, 404     
+    
 #SUBIR ARCHIVO
 @app.post("/api/tasks")
 def uploadFile() -> dict[str, object]:
