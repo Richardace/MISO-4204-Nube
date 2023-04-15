@@ -110,7 +110,6 @@ def uploadFile() -> dict[str, object]:
     taskId = tasks.startConversion.delay(uid, fileName, newFormat)
     return {"uid": uid, "taskId": taskId.id}
 
-
 @app.post("/add")
 def start_add() -> dict[str, object]:
     a = request.form.get("a", type=int)
@@ -145,6 +144,72 @@ def getTasks() -> dict[str, object]:
     conn.close()
     print("hola")
     return {"result_id": "hola"}
+
+
+#Consultar Archivo
+@app.get("/api/tasks/<id_task>")
+def consultarTarea(id_task: str) -> dict[str, object]:
+    userId = getUserId()
+    result = any
+    if userId == None:
+      return {"message":"Unauthorized"}, 401
+    
+    conn = returnConection()
+    with conn.cursor() as cur:
+        sql = "SELECT * FROM `archivos` where `id` = '{id_task}';"
+        sql = sql.format(id_task = id_task)
+        cur.execute(sql)
+        result = cur.fetchone()
+        print(result)
+    conn.close()
+    if result is not None:
+        return {
+        "id": result[0],
+        "status": result[1],
+        "timestamp": result[2],
+        "fileName": result[3],
+        "newFormat":  result[4],
+        "fileIndetifier": result[5],
+        "processedFile":  result[6],
+        "userId": result[7]
+       }
+    else:
+        return {"message":"Tare no exite"}, 404     
+   
+     
+#Eliminar un Archivo
+
+	
+@app.delete("/api/tasks/<id_task>")
+def eliminarTarea(id_task: str) -> dict[str, object]:
+    userId = getUserId()
+    result = any
+    if userId == None:
+       return {"message":"Unauthorized"}, 401
+    
+    conn = returnConection()
+    with conn.cursor() as cur:
+        sql = "DELETE FROM `archivos` where `id` = '{id_task}' AND `status` = '{status}' ;"
+        sql = sql.format(id_task = id_task, status = "PROCESSED")
+        result = cur.execute(sql)
+        print(result)
+        conn.commit()        
+        conn.close()
+    if result == 1:
+       return {"message":"Tare Eliminada"} 
+    else:
+       return {"message":"Tarea no siponible"}, 404  
+
+
+   
+
+  
+
+
+
+
+
+
 
 def returnConection():
     try:
