@@ -190,7 +190,7 @@ def consultarTarea(id_task: str) -> dict[str, object]:
         "userId": result[7]
        }
     else:
-        return {"message":"Tare no exite"}, 404     
+        return {"message":"Tarea no existe"}, 404     
    
      
 #Eliminar un Archivo
@@ -210,9 +210,9 @@ def eliminarTarea(id_task: str) -> dict[str, object]:
         conn.commit()        
         conn.close()
     if result == 1:
-       return {"message":"Tare Eliminada"} 
+       return {"message":"Tarea Eliminada Exitosamente"} 
     else:
-       return {"message":"Tarea no siponible"}, 404
+       return {"message":"Tarea no Diponible"}, 404
 
 @app.get("/api/tasks")
 def getTasks() -> dict[str, object]:
