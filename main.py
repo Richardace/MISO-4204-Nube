@@ -26,9 +26,30 @@ def hello():
 #SingUp
 @app.post("/api/auth/signup") 
 def register() -> dict[str,object]:
-    usuario = request.json["usuario"]
-    correo = request.json["correo"]
-    contrasena = request.json["contrasena"]
+    usuario = ""
+    try: 
+        usuario = request.json["usuario"]
+        if(usuario == ""):
+            return {"message":"El usuario no puede ser vacio!"}, 400        
+    except:
+        return {"message":"Hubo un problema valor del usuario"}, 400
+        
+    correo = ""
+    try:
+        correo = request.json["correo"]
+        if(correo == ""):
+            return {"message":"El correo no puede ser vacio!"}, 400  
+    except:
+         return {"message":"Hubo un problema valor del correo"}, 400
+    
+    contrasena = ""
+    try:
+        contrasena = request.json["contrasena"]
+        if(contrasena == ""):
+            return {"message":"La contrasena no puede ser vacio!"}, 400
+    except:
+        return {"message":"Hubo un problema valor del contrasena"}, 400
+    
     conn = returnConection()
     result = any
     print("SUCCESS: Connection to RDS MySQL instance succeeded")
@@ -38,8 +59,6 @@ def register() -> dict[str,object]:
         result = cur.fetchone()
         print(result)        
     
-    #usuario = Usuario.query.filter(Usuario.usuario == request.json["usuario"]).first()
-    #return {"user":usuario, "correo": correo, "contrasena":contrasena}
     if result is None:
         contrasena_encriptada = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest()
         with conn.cursor() as cur:
@@ -58,9 +77,22 @@ def register() -> dict[str,object]:
 
 @app.post("/api/auth/login")
 def login() -> dict[str,object]:
-    usuario = request.json["usuario"]
-    contrasena = request.json["contrasena"]
+    usuario = ""
+    try: 
+        usuario = request.json["usuario"]
+        if(usuario == ""):
+            return {"message":"El usuario no puede ser vacio!"}, 400        
+    except:
+        return {"message":"Hubo un problema valor del usuario"}, 400
     
+    contrasena = ""
+    try:
+        contrasena = request.json["contrasena"]
+        if(contrasena == ""):
+            return {"message":"La contrasena no puede ser vacio!"}, 400
+    except:
+        return {"message":"Hubo un problema valor del contrasena"}, 400
+       
     contrasena_encriptada = hashlib.md5(contrasena.encode('utf-8')).hexdigest()
     conn = returnConection()
     result = any
