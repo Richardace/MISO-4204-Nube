@@ -73,7 +73,7 @@ def register() -> dict[str,object]:
     
     if result is None:
         # Ejemplo de uso        
-        if(validar_contraseña(contrasena) == False):
+        if(validar_contrasena(contrasena) == False):
             return {"message":"La contraseña no cumple con los requisitos mínimos de seguridad.\
                     Longitud mínima de 8 caracteres\
                     Al menos una letra mayúscula\
@@ -98,12 +98,12 @@ def register() -> dict[str,object]:
 
 import re
 
-def validar_contraseña(contraseña):
+def validar_contrasena(contrasena):
     # Expresión regular para validar una contraseña segura
     regex = r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,}$"
     
     # Comprobar si la contraseña coincide con la expresión regular
-    if re.match(regex, contraseña):
+    if re.match(regex, contrasena):
         print("La contraseña es segura")
         return True
     else:
