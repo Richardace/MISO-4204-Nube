@@ -29,35 +29,35 @@ def hello():
 def register() -> dict[str,object]:
     usuario = ""
     try: 
-        usuario = request.json["usuario"]
+        usuario = request.json["username"]
         if(usuario == ""):
-            return {"message":"El usuario no puede ser vacio!"}, 400        
+            return {"message":"El username no puede ser vacio!"}, 400        
     except:
-        return {"message":"Hubo un problema valor del usuario"}, 400
+        return {"message":"Hubo un problema valor del username"}, 400
         
     correo = ""
     try:
-        correo = request.json["correo"]
+        correo = request.json["email"]
         if(correo == ""):
-            return {"message":"El correo no puede ser vacio!"}, 400  
+            return {"message":"El email no puede ser vacio!"}, 400  
     except:
-         return {"message":"Hubo un problema valor del correo"}, 400
+         return {"message":"Hubo un problema valor del email"}, 400
     
     contrasena = ""
     try:
-        contrasena = request.json["contrasena"]
+        contrasena = request.json["password1"]
         if(contrasena == ""):
-            return {"message":"La contrasena no puede ser vacio!"}, 400
+            return {"message":"El password1 no puede ser vacio!"}, 400
     except:
-        return {"message":"Hubo un problema valor del contrasena"}, 400
+        return {"message":"Hubo un problema valor del password1"}, 400
     
     contrasena2 = ""
     try:
-        contrasena2 = request.json["contrasena2"]
+        contrasena2 = request.json["password2"]
         if(contrasena2 == ""):
-            return {"message":"La contrasena2 no puede ser vacio!"}, 400
+            return {"message":"El password2 no puede ser vacio!"}, 400
     except:
-        return {"message":"Hubo un problema valor del contrasena2"}, 400
+        return {"message":"Hubo un problema valor del password2"}, 400
     
     if(contrasena != contrasena2):
         return {"message":"La contraseñas no son iguales"}, 400
@@ -81,7 +81,7 @@ def register() -> dict[str,object]:
                     Al menos un número\
                     Al menos un carácter especial (como !, @, #, $, %, etc.) "}, 400
             
-        contrasena_encriptada = hashlib.md5(request.json["contrasena"].encode('utf-8')).hexdigest()
+        contrasena_encriptada = hashlib.md5(request.json["password1"].encode('utf-8')).hexdigest()
         with conn.cursor() as cur:
             sql = "INSERT INTO `usuarios` (`id`, `usuario`, `correo`, `contrasena`) VALUES (null, '{usuario}', '{correo}', '{pwd}');"
             sql = sql.format(usuario = usuario, correo = correo, pwd = contrasena_encriptada)
@@ -114,7 +114,7 @@ def validar_contraseña(contraseña):
 def login() -> dict[str,object]:
     usuario = ""
     try: 
-        usuario = request.json["usuario"]
+        usuario = request.json["username"]
         if(usuario == ""):
             return {"message":"El usuario no puede ser vacio!"}, 400        
     except:
@@ -122,7 +122,7 @@ def login() -> dict[str,object]:
     
     contrasena = ""
     try:
-        contrasena = request.json["contrasena"]
+        contrasena = request.json["password"]
         if(contrasena == ""):
             return {"message":"La contrasena no puede ser vacio!"}, 400
     except:
@@ -168,14 +168,20 @@ def uploadFile() -> dict[str, object]:
     f.save("./uploads/"+fileName)
     conn = returnConection()
     with conn.cursor() as cur:
+        sqlValidateFileName = "SELECT * FROM dbconvert.archivos where fileName='" + fileName + "'"
+        cur.execute(sqlValidateFileName)
+        result = cur.fetchall()
+        if(len(result) > 0):
+            return {"Message": "Ya existe un archivo cargado con el mismo nombre, por favor cambiar el nombre"}
+        
         sql = "INSERT INTO `archivos` (`id`, `status`, `timestamp`, `fileName`, `newFormat`, `fileIdentifier`,`userId`) VALUES (null, '{status}', '{timestamp}', '{fileName}', '{newFormat}', '{fileIdentifier}', '{userId}');"
         sql = sql.format(status = "UPLOADED", timestamp = datetime.now(), fileName=fileName, newFormat=newFormat,fileIdentifier=uid, userId=userId)
         cur.execute(sql)
         eventId = cur.lastrowid
         print(eventId)
         conn.commit()
-    conn.close()
-    taskId = tasks.startConversion.delay(uid, fileName, newFormat)
+        conn.close()
+        taskId = tasks.startConversion.delay(uid, fileName, newFormat)
     return {"uid": uid, "taskId": taskId.id}
 
 @app.post("/add")
@@ -265,13 +271,12 @@ def getTasks() -> dict[str, object]:
         #sql = "SELECT * FROM dbconvert.archivos"
         sql = "SELECT * FROM dbconvert.archivos where userId = " + str(userId)
         
-        if(order != ""):
-            if(int(order) == 0):
-                sql = sql + " order by id asc"
-            else:
-                sql = sql + " order by id desc"
+        if(order == 0):
+            sql = sql + " order by id asc"
+        else:
+            sql = sql + " order by id desc"
         
-        if(max != ""):
+        if(max != -1):
             max = int(max)
             sql = sql + " LIMIT " + str(max)
 
@@ -311,12 +316,12 @@ def downloadFile(filename: str) -> dict[str, object]:
         sql = "SELECT * FROM dbconvert.archivos where fileName='" + filename + "'"
         cur.execute(sql)
         result = cur.fetchone()
-    
-    if(result[1] == "UPLOADED"):
-        return {"message": "El Archivo aun no esta listo para ser descargado."}  
 
     if result is None:
         return {"message": "No existe el archivo especificado"}          
+    
+    if(result[1] == "UPLOADED"):
+        return {"message": "El Archivo aun no esta listo para ser descargado."}  
     else:
         return send_file(result[6])
 
