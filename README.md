@@ -33,3 +33,6 @@ Esta es una api rest la cual permite realizar la conversión y comprensión de a
 - Gevent: 22.10.2
 - Pymysql: 1.0.3
 - Pyjwt: 2.6.0
+
+## Documentación de servicios
+[Postman](https://github.com/Richardace/MISO-4204-Nube/wiki/Postman)
