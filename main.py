@@ -13,6 +13,7 @@ import uuid
 from datetime import datetime
 import hashlib
 import jwt
+from flask import send_file
 
 app = create_app()
 celery_app = app.extensions["celery"]
@@ -178,8 +179,6 @@ def consultarTarea(id_task: str) -> dict[str, object]:
    
      
 #Eliminar un Archivo
-
-	
 @app.delete("/api/tasks/<id_task>")
 def eliminarTarea(id_task: str) -> dict[str, object]:
     userId = getUserId()
@@ -198,18 +197,78 @@ def eliminarTarea(id_task: str) -> dict[str, object]:
     if result == 1:
        return {"message":"Tare Eliminada"} 
     else:
-       return {"message":"Tarea no siponible"}, 404  
+       return {"message":"Tarea no siponible"}, 404
 
+@app.get("/api/tasks")
+def getTasks() -> dict[str, object]:
 
-   
+    userId = getUserId()
+    if userId == None:
+        return {"message":"Unauthorized"}, 401
+    
+    max = request.json["max"]
+    order = request.json["order"]
+    
+    conn = returnConection()
+    result = any
+    with conn.cursor() as cur:
+        sql = "SELECT * FROM dbconvert.archivos"
+        #sql = "SELECT * FROM dbconvert.archivos where userId = " + str(userId)
+        
+        if(order != ""):
+            if(int(order) == 0):
+                sql = sql + " order by id asc"
+            else:
+                sql = sql + " order by id desc"
+        
+        if(max != ""):
+            max = int(max)
+            sql = sql + " LIMIT " + str(max)
 
-  
+        cur.execute(sql)
+        result = cur.fetchall()
 
+    if result is None:
+        return {"message": "No Existen Registros de Tareas"}          
+    else:
+        dict = []
+        for i in range(len(result)):
+            tarea = {}
+            tarea['id'] = result[i][0]
+            tarea['status'] = result[i][1]
+            tarea['timestamp'] = result[i][2]
+            tarea['fileName'] = result[i][3]
+            tarea['newFormat'] = result[i][4]
+            tarea['fileIdentifier'] = result[i][5]
+            tarea['processedFile'] = result[i][6]
+            tarea['userId'] = result[i][7]
 
+            dict.append(tarea)
 
+    conn.close()
+    return json.dumps(dict, default=str)
 
+@app.get("/api/files/<filename>")
+def downloadFile(filename: str) -> dict[str, object]:
 
+    userId = getUserId()
+    if userId == None:
+        return {"message":"Unauthorized"}, 401
 
+    conn = returnConection()
+    result = any
+    with conn.cursor() as cur:
+        sql = "SELECT * FROM dbconvert.archivos where fileName='" + filename + "'"
+        cur.execute(sql)
+        result = cur.fetchone()
+    
+    if(result[1] == "UPLOADED"):
+        return {"message": "El Archivo aun no esta listo para ser descargado."}  
+
+    if result is None:
+        return {"message": "No existe el archivo especificado"}          
+    else:
+        return send_file(result[6])
 
 def returnConection():
     try:
