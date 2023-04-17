@@ -15,6 +15,7 @@ import hashlib
 import jwt
 from flask import send_file
 import re
+import time
 
 app = create_app()
 celery_app = app.extensions["celery"]
@@ -164,16 +165,16 @@ def uploadFile() -> dict[str, object]:
     uid = str(uuid.uuid4())
     newFormat = request.form.get("newFormat", type=str)
     f = request.files['fileName']
-    fileName = f.filename
+    fileName = str(time.time())+f.filename
     f.save("./uploads/"+fileName)
     conn = returnConection()
     with conn.cursor() as cur:
         sqlValidateFileName = "SELECT * FROM dbconvert.archivos where fileName='" + fileName + "'"
         cur.execute(sqlValidateFileName)
         result = cur.fetchall()
-        if(len(result) > 0):
-            return {"Message": "Ya existe un archivo cargado con el mismo nombre, por favor cambiar el nombre"}
-        
+        #if(len(result) > 0):
+        #    return {"Message": "Ya existe un archivo cargado con el mismo nombre, por favor cambiar el nombre"}
+        #fileName = str(time.time())+fileName
         sql = "INSERT INTO `archivos` (`id`, `status`, `timestamp`, `fileName`, `newFormat`, `fileIdentifier`,`userId`) VALUES (null, '{status}', '{timestamp}', '{fileName}', '{newFormat}', '{fileIdentifier}', '{userId}');"
         sql = sql.format(status = "UPLOADED", timestamp = datetime.now(), fileName=fileName, newFormat=newFormat,fileIdentifier=uid, userId=userId)
         cur.execute(sql)
@@ -327,7 +328,7 @@ def downloadFile(filename: str) -> dict[str, object]:
 
 def returnConection():
     try:
-        return pymysql.connect(host='54.211.21.168', port=3306, user='test', passwd='password', db='dbconvert')
+        return pymysql.connect(host='localhost', port=3306, user='test', passwd='password', db='dbconvert')
     except pymysql.MySQLError as e:
         print(repr(e))
         return None

@@ -7,7 +7,7 @@ import py7zr
 
 def returnConection():
     try:
-        return pymysql.connect(host='54.211.21.168', port=3306, user='test', passwd='password', db='dbconvert')
+        return pymysql.connect(host='localhost', port=3306, user='test', passwd='password', db='dbconvert')
     except pymysql.MySQLError as e:
         print(repr(e))
         return None
