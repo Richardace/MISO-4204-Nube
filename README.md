@@ -12,6 +12,7 @@ Esta es una api rest la cual permite realizar la conversión y comprensión de a
 
 ## Escenarios de pruebas
 ### 1. EndPoints
+-Url servicio desplegado http://54.234.15.150
 | Endpoint     | Metodos | Descripción  |
 |--------------|---------|--------------|
 | signup   | Post |Permite crear una cuenta de usuario, con los campos usuario, correo electrónico y contraseña. El usuario y el correo electrónico deben ser únicos en la plataforma, la contraseña debe seguir unos lineamientos mínimos de seguridad, además debe ser solicitada dos veces para que el usuario confirme que ingresa la contraseña correctamente.       |
