@@ -16,6 +16,8 @@ import jwt
 from flask import send_file
 import re
 import time
+from google.cloud import storage
+import os
 
 app = create_app()
 celery_app = app.extensions["celery"]
@@ -110,6 +112,14 @@ def validar_contrasena(contrasena):
     else:
         print("La contraseña no cumple con los requisitos mínimos de seguridad")
         return False
+def upload_blob(source_file_name, destination_blob_name):
+    storage_client = storage.Client()
+    bucket = storage_client.bucket("nube_archivos")
+    blob = bucket.blob(destination_blob_name)
+    generation_match_precondition = 0
+    blob.upload_from_filename(source_file_name, if_generation_match=generation_match_precondition)
+
+    print(f"File {source_file_name} uploaded to {destination_blob_name}.")
 
 @app.post("/api/auth/login")
 def login() -> dict[str,object]:
@@ -167,6 +177,8 @@ def uploadFile() -> dict[str, object]:
     f = request.files['fileName']
     fileName = str(time.time())+f.filename
     f.save("./uploads/"+fileName)
+    upload_blob("./uploads/"+fileName, fileName)
+    os.remove("./uploads/"+fileName)
     conn = returnConection()
     with conn.cursor() as cur:
         sqlValidateFileName = "SELECT * FROM dbconvert.archivos where fileName='" + fileName + "'"
@@ -183,7 +195,7 @@ def uploadFile() -> dict[str, object]:
         conn.commit()
         conn.close()
         taskId = tasks.startConversion.delay(uid, fileName, newFormat)
-    return {"uid": uid, "taskId": taskId.id}
+    return {"uid": uid, "taskId": taskId.id, "filename": fileName}
 
 @app.post("/add")
 def start_add() -> dict[str, object]:
@@ -252,7 +264,7 @@ def eliminarTarea(id_task: str) -> dict[str, object]:
         conn.commit()        
         conn.close()
     if result == 1:
-       return {"message":"Tare Eliminada"} 
+       return {"message":"Tarea Eliminada"} 
     else:
        return {"message":"Tarea no siponible"}, 404
 
@@ -317,18 +329,27 @@ def downloadFile(filename: str) -> dict[str, object]:
         sql = "SELECT * FROM dbconvert.archivos where fileName='" + filename + "'"
         cur.execute(sql)
         result = cur.fetchone()
-
+    print(result)
     if result is None:
         return {"message": "No existe el archivo especificado"}          
     
     if(result[1] == "UPLOADED"):
         return {"message": "El Archivo aun no esta listo para ser descargado."}  
     else:
+        getFile(result[6])
         return send_file(result[6])
+    
+def getFile(filename):
+    storage_client = storage.Client()
+    bucket = storage_client.bucket("nube_archivos")
+    blob = bucket.blob(filename)
+    location = filename
+    blob.download_to_filename(location)
+    print("Downloaded storage object {} to local file {}.".format(filename, location))
 
 def returnConection():
     try:
-        return pymysql.connect(host='localhost', port=3306, user='test', passwd='password', db='dbconvert')
+        return pymysql.connect(host='', port=3306, user='', passwd='', db='dbconvert')
     except pymysql.MySQLError as e:
         print(repr(e))
         return None
