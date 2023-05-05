@@ -349,10 +349,10 @@ def getFile(filename):
 
 def returnConection():
     try:
-        return pymysql.connect(host='', port=3306, user='', passwd='', db='dbconvert')
+        return pymysql.connect(host='35.239.100.2', port=3306, user='root', passwd='<f{Q=re(t_}v/F<#', db='dbconvert')
     except pymysql.MySQLError as e:
         print(repr(e))
         return None
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(debug=False,host='0.0.0.0')

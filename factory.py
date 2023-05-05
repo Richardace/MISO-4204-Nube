@@ -20,8 +20,8 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_mapping(
         CELERY=dict(
-            broker_url="redis://localhost",
-            result_backend="redis://localhost",
+            broker_url="redis://35.224.157.231",
+            result_backend="redis://35.224.157.231",
             task_ignore_result=True,
             include = ('async_tasks.tasks')
         ),
