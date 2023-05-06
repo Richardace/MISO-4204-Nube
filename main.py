@@ -113,7 +113,7 @@ def validar_contrasena(contrasena):
         print("La contraseña no cumple con los requisitos mínimos de seguridad")
         return False
 def upload_blob(source_file_name, destination_blob_name):
-    storage_client = storage.Client()
+    storage_client = storage.Client("parabolic-hook-383716")
     bucket = storage_client.bucket("nube_archivos")
     blob = bucket.blob(destination_blob_name)
     generation_match_precondition = 0
@@ -340,7 +340,7 @@ def downloadFile(filename: str) -> dict[str, object]:
         return send_file(result[6])
     
 def getFile(filename):
-    storage_client = storage.Client()
+    storage_client = storage.Client("parabolic-hook-383716")
     bucket = storage_client.bucket("nube_archivos")
     blob = bucket.blob(filename)
     location = filename

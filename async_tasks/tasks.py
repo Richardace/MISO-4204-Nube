@@ -6,7 +6,7 @@ import pymysql
 import py7zr
 from google.cloud import storage
 def getFile(filename):
-    storage_client = storage.Client()
+    storage_client = storage.Client("parabolic-hook-383716")
     bucket = storage_client.bucket("nube_archivos")
     blob = bucket.blob(filename)
     location = "./receivedFiles/"+filename
@@ -14,7 +14,7 @@ def getFile(filename):
     print("Downloaded storage object {} to local file {}.".format(filename, location))
 
 def upload_blob(source_file_name, destination_blob_name):
-    storage_client = storage.Client()
+    storage_client = storage.Client("parabolic-hook-383716")
     bucket = storage_client.bucket("nube_archivos")
     blob = bucket.blob(destination_blob_name)
     generation_match_precondition = 0
