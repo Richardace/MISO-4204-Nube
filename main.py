@@ -275,8 +275,8 @@ def getTasks() -> dict[str, object]:
     if userId == None:
         return {"message":"Unauthorized"}, 401
     
-    max = request.json["max"]
-    order = request.json["order"]
+    max = request.args.get("max")
+    order = request.args.get("order")
     
     conn = returnConection()
     result = any
@@ -314,7 +314,7 @@ def getTasks() -> dict[str, object]:
             dict.append(tarea)
 
     conn.close()
-    return json.dumps(dict, default=str)
+    return {"data":json.dumps(dict, default=str)}
 
 @app.get("/api/files/<filename>")
 def downloadFile(filename: str) -> dict[str, object]:
