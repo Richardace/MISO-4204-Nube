@@ -17,6 +17,7 @@ from flask import send_file
 import re
 import time
 from google.cloud import storage
+from google.cloud import pubsub_v1
 import os
 
 app = create_app()
@@ -194,8 +195,8 @@ def uploadFile() -> dict[str, object]:
         print(eventId)
         conn.commit()
         conn.close()
-        taskId = tasks.startConversion.delay(uid, fileName, newFormat)
-    return {"uid": uid, "taskId": taskId.id, "filename": fileName}
+        taskId = enqueue(json.dumps({"uid": uid, "filename": fileName, "newFormat": newFormat}))
+    return {"uid": uid, "taskId": taskId, "filename": fileName, "newFormat": newFormat}
 
 @app.post("/add")
 def start_add() -> dict[str, object]:
@@ -346,6 +347,15 @@ def getFile(filename):
     location = filename
     blob.download_to_filename(location)
     print("Downloaded storage object {} to local file {}.".format(filename, location))
+
+def enqueue(data_str):
+    publisher = pubsub_v1.PublisherClient()
+    topic_path = publisher.topic_path("parabolic-hook-383716", "worker-queue")
+    data = data_str.encode("utf-8")
+    future = publisher.publish(topic_path, data)
+    print(future.result())
+    print(f"Published messages to {topic_path}.")
+    return future.result()
 
 def returnConection():
     try:

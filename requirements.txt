@@ -24,3 +24,4 @@ pymysql==1.0.3
 pyjwt==2.6.0
 py7zr==0.20.5
 google-cloud-storage==2.9.0
+google-cloud-pubsub==2.16.1
